@@ -1,0 +1,10 @@
+{
+  "builtInLibrariesFolders": "C:\\Program Files (x86)\\Arduino\\libraries",
+  "customBuildProperties": "build.warn_data_percentage=75",
+  "fqbn": "arduino:avr:mega:cpu=atmega2560",
+  "hardwareFolders": "C:\\Program Files (x86)\\Arduino\\hardware,C:\\Users\\user\\AppData\\Local\\Arduino15\\packages",
+  "otherLibrariesFolders": "C:\\Users\\user\\Documents\\Arduino\\libraries",
+  "runtime.ide.version": "10606",
+  "sketchLocation": "D:\\arduino_prg\\TFT32\\Demo_Portrait\\Demo_Portrait.ino",
+  "toolsFolders": "C:\\Program Files (x86)\\Arduino\\tools-builder,C:\\Program Files (x86)\\Arduino\\hardware\\tools\\avr,C:\\Users\\user\\AppData\\Local\\Arduino15\\packages"
+}

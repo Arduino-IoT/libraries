@@ -1,0 +1,19 @@
+AppsBee	KEYWORD1
+
+
+SendGCommand	KEYWORD2
+SendString	KEYWORD2
+SendInt	KEYWORD2
+SendFloat	KEYWORD2
+SetDebugSerial	KEYWORD2
+begin	KEYWORD2
+ZigBeeEncodeFrame	KEYWORD2
+RecvValidFrame	KEYWORD2
+ZigBeeUniIDread	KEYWORD2
+
+fmIsGCommand	LITERAL1
+fmIsString	LITERAL1
+fmIsInt	LITERAL1
+fmIsFloat	LITERAL1
+BROADCAST	LITERAL1
+

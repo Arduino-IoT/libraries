@@ -1,0 +1,38 @@
+#######################################
+# Syntax Coloring Map For Wire
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin 					KEYWORD2
+prepare_data	KEYWORD2
+set_configuration_hook	KEYWORD2
+set_publish_data_hook	KEYWORD2
+sync_pub				KEYWORD2
+init_config				KEYWORD2
+connect 				KEYWORD2
+loop 					KEYWORD2
+
+prepare_configuration	KEYWORD2
+on_connecting			KEYWORD2
+prepare_subscribe		KEYWORD2
+after_prepare_data		KEYWORD2
+on_message				KEYWORD2
+on_published			KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+WiFiConnector 				KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+

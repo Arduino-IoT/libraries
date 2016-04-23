@@ -1,0 +1,48 @@
+#######################################
+# Syntax Coloring Map For MP3 Shield
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+MP3	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+play_sd	KEYWORD2
+play_usb_disk	KEYWORD2
+play_usb_disk	KEYWORD2
+play_spi_flash	KEYWORD2
+sd_to_flash	KEYWORD2
+usb_to_flash	KEYWORD2
+set_mode	KEYWORD2
+volume	KEYWORD2
+pause	KEYWORD2
+stop	KEYWORD2
+previous	KEYWORD2
+send_cmd	KEYWORD2
+next	KEYWORD2
+
+#######################################
+# Instances (KEYWORD3)
+#######################################
+u8	KEYWORD3
+s8	KEYWORD3
+u16	KEYWORD3
+s16	KEYWORD3
+u32	KEYWORD3
+s32	KEYWORD3
+#u64	KEYWORD3
+#s64	KEYWORD3
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+SINGLE	LITERAL1
+CYCLE	LITERAL1
+REPEAT	LITERAL1
+RANDOM	LITERAL1

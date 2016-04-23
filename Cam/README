@@ -1,0 +1,13 @@
+This is an arduino compatible code. 
+
+In brief it does the following:
+Speaks the LinkSprite JPEG TTL Camera protocol
+Saves image data on a file on a microSD
+Injects gps data into the image 
+
+Note A: To get max serial baudrate (115200) use a 7.3Mhz crystal
+Note B: Input voltage 3v3
+Note C: Picture names only in 7.3 format
+Note D: Up to 9999 different names can be saved. Then it will roll back to 0 and overwrite. 
+Note E:	EEPROM[0] & EEPROM[1] are used to keep the last picture ID so in case of reboot naming continues from last ID.
+Note F: When reprogramming the AVR all EEPROM contents are overwritten with 0xFF causing picture ID to roll back to 0.

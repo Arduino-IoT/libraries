@@ -1,0 +1,33 @@
+#######################################
+# Syntax Coloring Map For Test
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+buttons	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+NESpad	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+NES_A	LITERAL1
+NES_B	LITERAL1
+NES_SELECT	LITERAL1
+NES_START	LITERAL1
+NES_UP	LITERAL1
+NES_DOWN	LITERAL1
+NES_LEFT	LITERAL1
+NES_RIGHT	LITERAL1
+

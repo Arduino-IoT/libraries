@@ -12,6 +12,11 @@ works on OneWire every 6 to 12 months.  Patches usually wait that
 long.  If anyone is interested in more actively maintaining OneWire,
 please contact Paul.
 
+Version 2.3:
+  Unknonw chip fallback mode, Roger Clark
+  Teensy-LC compatibility, Paul Stoffregen
+  Search bug fix, Love Nystrom
+
 Version 2.2:
   Teensy 3.0 compatibility, Paul Stoffregen, paul@pjrc.com
   Arduino Due compatibility, http://arduino.cc/forum/index.php?topic=141030
@@ -116,189 +121,12 @@ sample code bearing this copyright.
 
 #include "OneWire.h"
 
-#ifdef __cplusplus
- extern "C" {
-#endif
 
-#include "PinNames.h"
-#include "objects.h"
-#include "hal_api.h"
-#include "rtl8195a_gpio.h"
-
-#define HAL_GPIO_PIN_NAME(port,pin)         (((port)<<5)|(pin))
-#define HAL_GPIO_GET_PORT_BY_NAME(x)        ((x>>5) & 0x03)
-#define HAL_GPIO_GET_PIN_BY_NAME(x)         (x & 0x1f)
-
-
-#ifdef __cplusplus
-}
-#endif
-
-
-//
-// private functions
-static const u8 _GPIO_SWPORT_DR_TBL[] = {
-    GPIO_PORTA_DR,
-    GPIO_PORTB_DR,
-    GPIO_PORTC_DR
-};
-
-
-static const u8 _GPIO_EXT_PORT_TBL[] = {
-    GPIO_EXT_PORTA,
-    GPIO_EXT_PORTB,
-    GPIO_EXT_PORTC
-};
-
-static const PinName pin_name_tbl[] = {
-	PA_6, PA_7, PA_5, PD_4, PD_5, PA_4, PA_3, PA_2, PB_4, PB_5, PC_0, PC_2, PC_3, PC_1
-};
-
-static const u8 _GPIO_PinMap_Chip2IP_8195a[][2] = {
-/* Chip Pin, IP Pin */
-    {_PA_0, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 0)},
-    {_PA_1, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 1)},
-    {_PA_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 0)},
-    {_PA_3, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 1)},
-    {_PA_4, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 2)},
-    {_PA_5, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 3)},
-    {_PA_6, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 4)},
-    {_PA_7, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 5)},
-    {_PB_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 6)},
-    {_PB_1, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 7)},
-    {_PB_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 8)},
-    {_PB_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 2)},
-    {_PB_4, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 3)},
-    {_PB_5, HAL_GPIO_PIN_NAME(GPIO_PORT_B, 9)},
-    {_PB_6, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 4)},
-    {_PB_7, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 5)},
-    {_PC_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B,10)},
-    {_PC_1, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 6)},
-    {_PC_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B,11)},
-    {_PC_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 7)},
-    {_PC_4, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 8)},
-    {_PC_5, HAL_GPIO_PIN_NAME(GPIO_PORT_A, 9)},
-    {_PC_6, HAL_GPIO_PIN_NAME(GPIO_PORT_A,10)},
-    {_PC_7, HAL_GPIO_PIN_NAME(GPIO_PORT_A,11)},
-    {_PC_8, HAL_GPIO_PIN_NAME(GPIO_PORT_A,12)},
-    {_PC_9, HAL_GPIO_PIN_NAME(GPIO_PORT_A,13)},
-    {_PD_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B,12)},
-    {_PD_1, HAL_GPIO_PIN_NAME(GPIO_PORT_A,14)},
-    {_PD_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B,13)},
-    {_PD_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A,15)},
-    {_PD_4, HAL_GPIO_PIN_NAME(GPIO_PORT_A,16)},
-    {_PD_5, HAL_GPIO_PIN_NAME(GPIO_PORT_A,17)},
-    {_PD_6, HAL_GPIO_PIN_NAME(GPIO_PORT_A,18)},
-    {_PD_7, HAL_GPIO_PIN_NAME(GPIO_PORT_A,19)},
-    {_PD_8, HAL_GPIO_PIN_NAME(GPIO_PORT_B,14)},
-    {_PD_9, HAL_GPIO_PIN_NAME(GPIO_PORT_A,20)},
-    {_PE_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B,15)},
-    {_PE_1, HAL_GPIO_PIN_NAME(GPIO_PORT_A,21)},
-    {_PE_2, HAL_GPIO_PIN_NAME(GPIO_PORT_A,22)},
-    {_PE_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A,23)},
-    {_PE_4, HAL_GPIO_PIN_NAME(GPIO_PORT_B,16)},
-    {_PE_5, HAL_GPIO_PIN_NAME(GPIO_PORT_A,24)},
-    {_PE_6, HAL_GPIO_PIN_NAME(GPIO_PORT_A,25)},
-    {_PE_7, HAL_GPIO_PIN_NAME(GPIO_PORT_A,26)},
-    {_PE_8, HAL_GPIO_PIN_NAME(GPIO_PORT_A,27)},
-    {_PE_9, HAL_GPIO_PIN_NAME(GPIO_PORT_B,17)},
-    {_PE_A, HAL_GPIO_PIN_NAME(GPIO_PORT_B,18)},
-    {_PF_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B,19)},
-    {_PF_1, HAL_GPIO_PIN_NAME(GPIO_PORT_B,20)},
-    {_PF_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B,21)},
-    {_PF_3, HAL_GPIO_PIN_NAME(GPIO_PORT_B,22)},
-    {_PF_4, HAL_GPIO_PIN_NAME(GPIO_PORT_B,23)},
-    {_PF_5, HAL_GPIO_PIN_NAME(GPIO_PORT_B,24)},
-    {_PG_0, HAL_GPIO_PIN_NAME(GPIO_PORT_B,25)},
-    {_PG_1, HAL_GPIO_PIN_NAME(GPIO_PORT_B,26)},
-    {_PG_2, HAL_GPIO_PIN_NAME(GPIO_PORT_B,27)},
-    {_PG_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A,28)},
-    {_PG_4, HAL_GPIO_PIN_NAME(GPIO_PORT_B,28)},
-    {_PG_5, HAL_GPIO_PIN_NAME(GPIO_PORT_B,29)},
-    {_PG_6, HAL_GPIO_PIN_NAME(GPIO_PORT_B,30)},
-    {_PG_7, HAL_GPIO_PIN_NAME(GPIO_PORT_B,31)},
-    {_PH_0, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 0)},
-    {_PH_1, HAL_GPIO_PIN_NAME(GPIO_PORT_A,29)},
-    {_PH_2, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 1)},
-    {_PH_3, HAL_GPIO_PIN_NAME(GPIO_PORT_A,30)},
-    {_PH_4, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 2)},
-    {_PH_5, HAL_GPIO_PIN_NAME(GPIO_PORT_A,31)},
-    {_PH_6, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 3)},
-    {_PH_7, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 4)},
-    {_PI_0, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 5)},
-    {_PI_1, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 6)},
-    {_PI_2, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 7)},
-    {_PI_3, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 8)},
-    {_PI_4, HAL_GPIO_PIN_NAME(GPIO_PORT_C, 9)},
-    {_PI_5, HAL_GPIO_PIN_NAME(GPIO_PORT_C,10)},
-    {_PI_6, HAL_GPIO_PIN_NAME(GPIO_PORT_C,11)},
-    {_PI_7, HAL_GPIO_PIN_NAME(GPIO_PORT_C,12)},
-    {_PJ_0, HAL_GPIO_PIN_NAME(GPIO_PORT_C,13)},
-    {_PJ_1, HAL_GPIO_PIN_NAME(GPIO_PORT_C,14)},
-    {_PJ_2, HAL_GPIO_PIN_NAME(GPIO_PORT_C,15)},
-    {_PJ_3, HAL_GPIO_PIN_NAME(GPIO_PORT_C,16)},
-    {_PJ_4, HAL_GPIO_PIN_NAME(GPIO_PORT_C,17)},
-    {_PJ_5, HAL_GPIO_PIN_NAME(GPIO_PORT_C,18)},
-    {_PJ_6, HAL_GPIO_PIN_NAME(GPIO_PORT_C,19)},
-    {_PK_0, HAL_GPIO_PIN_NAME(GPIO_PORT_C,20)},
-    {_PK_1, HAL_GPIO_PIN_NAME(GPIO_PORT_C,21)},
-    {_PK_2, HAL_GPIO_PIN_NAME(GPIO_PORT_C,22)},
-    {_PK_3, HAL_GPIO_PIN_NAME(GPIO_PORT_C,23)},
-    {_PK_4, HAL_GPIO_PIN_NAME(GPIO_PORT_C,24)},
-    {_PK_5, HAL_GPIO_PIN_NAME(GPIO_PORT_C,25)},
-    {_PK_6, HAL_GPIO_PIN_NAME(GPIO_PORT_C,26)},
-
-    {0xff, 0xff}    // the end of table
-};
-
-//
-uint32_t OneWire::get_pin_name(uint32_t chip_pin)
+OneWire::OneWire(uint8_t pin)
 {
-	uint32_t ip_pin = 0xff;
-	int i;
-	
-    for (i=0; _GPIO_PinMap_Chip2IP_8195a[i][1] != 0xff; i++) {
-        if (_GPIO_PinMap_Chip2IP_8195a[i][0] == chip_pin) {
-            ip_pin = _GPIO_PinMap_Chip2IP_8195a[i][1];
-            break;
-        }
-    }
-
-	return ip_pin;
-	
-}
-
-
-uint8_t OneWire::direct_read()
-{
-	return (uint8_t)digitalRead(this->pin);
-}
-
-
-uint8_t OneWire::direct_write(uint8_t pin_state)
-{
-
-	digitalWrite(this->pin, pin_state);
-}
-
-
-
-OneWire::OneWire(uint8_t pin1)
-{
-	PinName pin_name;
-
-	DiagPrintf("OneWire : pin = %d \r\n", pin1);
-	this->pin = pin1;
-	
-	pinMode(this->pin, INPUT_PULLUP);
-
-	pin_name = pin_name_tbl[this->pin];
-	this->pin_num = get_pin_name(pin_name);
-    this->port_num = HAL_GPIO_GET_PORT_BY_NAME(this->pin_num);
-	this->pin_addr = _GPIO_EXT_PORT_TBL[port_num];
-	DiagPrintf("OneWire : pin = 0x%x, pin_num = 0x%x, port_num = 0x%x, pin_addr = 0x%x \r\n", 
-		this->pin, this->pin_num, this->port_num, this->pin_addr);
-	
+	pinMode(pin, INPUT);
+	bitmask = PIN_TO_BITMASK(pin);
+	baseReg = PIN_TO_BASEREG(pin);
 #if ONEWIRE_SEARCH
 	reset_search();
 #endif
@@ -313,35 +141,31 @@ OneWire::OneWire(uint8_t pin1)
 //
 uint8_t OneWire::reset(void)
 {
+	IO_REG_TYPE mask = bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
 	uint8_t r;
-	uint32_t retries = 125;
+	uint8_t retries = 125;
 
-	noInterrupts();	
-	pinMode(this->pin, INPUT);
+	noInterrupts();
+	DIRECT_MODE_INPUT(reg, mask);
 	interrupts();
-	
 	// wait until the wire is high... just in case
 	do {
-		if (--retries == 0) {
-			DiagPrintf("%s timeout \r\n", __FUNCTION__);
-			return 0;
-		}
+		if (--retries == 0) return 0;
 		delayMicroseconds(2);
-	} while ( !direct_read());
+	} while ( !DIRECT_READ(reg, mask));
 
-	noInterrupts();	
-	digital_change_dir(this->pin,OUTPUT);
-	direct_write(0);
-	interrupts();
-	delayMicroseconds(468); // 12 us 
 	noInterrupts();
-	digital_change_dir(this->pin,INPUT); //8 us
-	delayMicroseconds(62);
-	r = !direct_read();
+	DIRECT_WRITE_LOW(reg, mask);
+	DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
 	interrupts();
-	
-	delayMicroseconds(410); 
-	
+	delayMicroseconds(480);
+	noInterrupts();
+	DIRECT_MODE_INPUT(reg, mask);	// allow it to float
+	delayMicroseconds(70);
+	r = !DIRECT_READ(reg, mask);
+	interrupts();
+	delayMicroseconds(410);
 	return r;
 }
 
@@ -349,26 +173,27 @@ uint8_t OneWire::reset(void)
 // Write a bit. Port and bit is used to cut lookup time and provide
 // more certain timing.
 //
-IMAGE2_TEXT_SECTION
 void OneWire::write_bit(uint8_t v)
 {
+	IO_REG_TYPE mask=bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
 
 	if (v & 1) {
 		noInterrupts();
-		digital_change_dir(this->pin, OUTPUT);
-		direct_write(0);
-		//delayMicroseconds(6);
-		direct_write(1);
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(10);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
 		interrupts();
 		delayMicroseconds(55);
 	} else {
 		noInterrupts();
-		digital_change_dir(this->pin, OUTPUT); 
-		direct_write(0);
-		delayMicroseconds(52);
-		direct_write(1);
+		DIRECT_WRITE_LOW(reg, mask);
+		DIRECT_MODE_OUTPUT(reg, mask);	// drive output low
+		delayMicroseconds(65);
+		DIRECT_WRITE_HIGH(reg, mask);	// drive output high
 		interrupts();
-		delayMicroseconds(1);
+		delayMicroseconds(5);
 	}
 }
 
@@ -378,15 +203,19 @@ void OneWire::write_bit(uint8_t v)
 //
 uint8_t OneWire::read_bit(void)
 {
+	IO_REG_TYPE mask=bitmask;
+	volatile IO_REG_TYPE *reg IO_REG_ASM = baseReg;
 	uint8_t r;
 
 	noInterrupts();
-	digital_change_dir(this->pin,OUTPUT); // 8 us
-	direct_write(0);
-	digital_change_dir(this->pin,INPUT); // 8 us
-	r = direct_read();
+	DIRECT_MODE_OUTPUT(reg, mask);
+	DIRECT_WRITE_LOW(reg, mask);
+	delayMicroseconds(3);
+	DIRECT_MODE_INPUT(reg, mask);	// let pin float, pull up will raise
+	delayMicroseconds(10);
+	r = DIRECT_READ(reg, mask);
 	interrupts();
-	delayMicroseconds(45);
+	delayMicroseconds(53);
 	return r;
 }
 
@@ -397,26 +226,27 @@ uint8_t OneWire::read_bit(void)
 // go tri-state at the end of the write to avoid heating in a short or
 // other mishap.
 //
-IMAGE2_TEXT_SECTION
-void OneWire::write(uint8_t v, uint8_t power) {
+void OneWire::write(uint8_t v, uint8_t power /* = 0 */) {
     uint8_t bitMask;
 
     for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-		OneWire::write_bit( (bitMask & v)?1:0);
+	OneWire::write_bit( (bitMask & v)?1:0);
     }
     if ( !power) {
-		noInterrupts();
-		pinMode(this->pin, INPUT_PULLDN);
-		interrupts();
+	noInterrupts();
+	DIRECT_MODE_INPUT(baseReg, bitmask);
+	DIRECT_WRITE_LOW(baseReg, bitmask);
+	interrupts();
     }
 }
 
-void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power) {
+void OneWire::write_bytes(const uint8_t *buf, uint16_t count, bool power /* = 0 */) {
   for (uint16_t i = 0 ; i < count ; i++)
     write(buf[i]);
   if (!power) {
     noInterrupts();
-	pinMode(this->pin, INPUT);
+    DIRECT_MODE_INPUT(baseReg, bitmask);
+    DIRECT_WRITE_LOW(baseReg, bitmask);
     interrupts();
   }
 }
@@ -458,6 +288,15 @@ void OneWire::skip()
 {
     write(0xCC);           // Skip ROM
 }
+
+void OneWire::depower()
+{
+	noInterrupts();
+	DIRECT_MODE_INPUT(baseReg, bitmask);
+	interrupts();
+}
+
+#if ONEWIRE_SEARCH
 
 //
 // You need to use this function to start a search again from the beginning.
@@ -530,7 +369,6 @@ uint8_t OneWire::search(uint8_t *newAddr)
          LastDiscrepancy = 0;
          LastDeviceFlag = FALSE;
          LastFamilyDiscrepancy = 0;
-		 DiagPrintf("%s reset failed \r\n", __FUNCTION__);
          return FALSE;
       }
 
@@ -619,11 +457,13 @@ uint8_t OneWire::search(uint8_t *newAddr)
       LastDeviceFlag = FALSE;
       LastFamilyDiscrepancy = 0;
       search_result = FALSE;
+   } else {
+      for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    }
-   for (int i = 0; i < 8; i++) newAddr[i] = ROM_NO[i];
    return search_result;
-}
+  }
 
+#endif
 
 #if ONEWIRE_CRC
 // The 1-Wire CRC scheme is described in Maxim Application Note 27:
@@ -721,4 +561,3 @@ uint16_t OneWire::crc16(const uint8_t* input, uint16_t len, uint16_t crc)
 #endif
 
 #endif
-

@@ -1,0 +1,5 @@
+DS18B20	KEYWORD1
+
+
+getTemperature	KEYWORD2
+

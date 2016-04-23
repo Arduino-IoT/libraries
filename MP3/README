@@ -1,0 +1,70 @@
+Library for the Arduino MP3 Shield
+
+Elechouse Inc.
+www.elechouse.com
+
+*******************************************************************************
+-------------------------------------------------------------------------------
+Version 0.2.0	2012-12-13
+	add support to software serial, change begin() to begin(serial_type st)
+
+-------------------------------------------------------------------------------
+Version 0.1.0
+	initial version.
+	
+-------------------------------------------------------------------------------
+Features:
+- Supply fuctions below:
+		/** begin function, Arduino style */
+		void begin();
+		/** MP3 shield basic send command function */
+		void send_cmd(u8 *cmd);
+		/** play music in SD, and choose SD mode */
+		void play_sd(u16 num);
+		/** play music in USB, and choose USB mode */
+		void play_usb_disk(u16 num);
+		/** play music in SPI FLASH */
+		void play_spi_flash(u16 num);
+		/** play next music */
+		void next();
+		/** play previous music */
+		void previous();
+		/** pause when play, play when pause */
+		void pause();
+		/** stop playing */
+		void stop();
+		/** set volume */
+		void volume(u8 vol);
+		/** set mode, Use SINGLE, REPEAT, CYCLE or RANDOM as parameter */
+		void set_mode(u8 mode);
+		/** copy files from SD to SPI FLASH */
+		void sd_to_flash(void);
+		/** copy files from USB to SPI FLASH */
+		void usb_to_flash(void);
+- Provides a sample application which demonstrates the use of the MP3 library
+
+-------------------------------------------------------------------------------
+Warnings:
+	1. SD card and USB-Disk must be plug in before Power On. The Arduino MP3 
+		Shield don't surpport Hot-swappable.
+	2. In this MP3 library, the arduino delay 3s to wait the arduino MP3 Shiled
+		be stable.
+	3. When upload the Arduino board(UNO etc.), you must pull out the Arduino 
+		MP3	shield from Arduino board. This because the Arduino MP3 Shield is
+		connected with Arduino through UART.
+		
+-------------------------------------------------------------------------------
+How To:
+	1. Close your Arduio
+	2. Find the path of you Arduino, suppose to $ARDUION_PATH$
+	3. cpy MP3 Folder to $ARDUION_PATH$/libraries
+	4. Start up your Arduino IDE
+	5. Open File->Examples->MP3->MP3
+	6. Compile and upload the program
+	7. Plug
+	
+-------------------------------------------------------------------------------
+Known issues:
+None
+-------------------------------------------------------------------------------
+*******************************************************************************

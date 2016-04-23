@@ -1,0 +1,51 @@
+#######################################
+# Syntax Coloring Map for Garan
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Garan   KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin   KEYWORD2
+end     KEYWORD2
+read    KEYWORD2
+available       KEYWORD2
+isListening     KEYWORD2
+overflow        KEYWORD2
+flush   KEYWORD2
+listen  KEYWORD2
+
+singlePlay      KEYWORD2
+sequencePlay    KEYWORD2
+singleLoopPlay  KEYWORD2
+singlePlayName  KEYWORD2
+sequencePlayName        KEYWORD2  
+singleLoopName  KEYWORD2
+stop            KEYWORD2
+pausePlay       KEYWORD2
+next            KEYWORD2
+prev            KEYWORD2
+volumeUp        KEYWORD2
+volumeDown      KEYWORD2
+setVolume       KEYWORD2
+eqChange        KEYWORD2
+setEQ           KEYWORD2
+standbyMode     KEYWORD2
+setTime         KEYWORD2
+getPlayingName  KEYWORD2
+getMusicNumbers KEYWORD2
+getPlayingOrder KEYWORD2
+getTime         KEYWORD2
+feedbackAtEnd   KEYWORD2
+NoFeedbackAtEnd KEYWORD2
+getVersion      KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
